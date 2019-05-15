@@ -30,7 +30,8 @@ end
 
 def self.run_cmake(timeout, args)
   # Set to process group so we can kill it and its children
-  pid = Process.spawn("cmake #{args}", pgroup: true)
+  pgroup = Gem.win_platform? ? :new_pgroup : :pgroup
+  pid = Process.spawn("cmake #{args}", pgroup => true)
 
   Timeout.timeout(timeout) do
     Process.waitpid(pid)
@@ -81,7 +82,6 @@ if arg_config("--use-system-libraries", !!ENV['RUGGED_USE_SYSTEM_LIBRARIES'])
 
   try_compile(<<-SRC) or abort "libgit2 version is not compatible, expected ~> #{major}.#{minor}.0"
 #include <git2/version.h>
-
 #if LIBGIT2_VER_MAJOR != #{major} || LIBGIT2_VER_MINOR != #{minor}
 #error libgit2 version is not compatible
 #endif
